@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Score History</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="min-h-screen p-6">
+    <h1 class="text-3xl font-bold text-center mb-6">Score History</h1>
+
+    <div class="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow">
+      <table class="w-full text-left border">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="p-3 border">Set</th>
+            <th class="p-3 border">Score (%)</th>
+            <th class="p-3 border">Date</th>
+          </tr>
+        </thead>
+        <tbody id="scoreTable">
+          <!-- Scores will load here -->
+        </tbody>
+      </table>
+
+      <div class="text-center mt-6">
+        <button onclick="clearScores()" class="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded-xl">Clear History</button>
+        <a href="index.html" class="ml-4 inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-xl">Back to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const table = document.getElementById('scoreTable');
+    const history = JSON.parse(localStorage.getItem('scoreHistory') || '[]');
+
+    if (history.length === 0) {
+      table.innerHTML = '<tr><td colspan="3" class="p-4 text-center">No history found.</td></tr>';
+    } else {
+      history.reverse().forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3 border">${row.set}</td>
+          <td class="p-3 border">${row.score}</td>
+          <td class="p-3 border">${row.date}</td>
+        `;
+        table.appendChild(tr);
+      });
+    }
+
+    function clearScores() {
+      if (confirm('Are you sure you want to delete all score history?')) {
+        localStorage.removeItem('scoreHistory');
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IQ Test</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .tile {
+      transition: background-color 0.3s ease;
+    }
+    .tile-white { background-color: white; }
+    .tile-gray { background-color: #d1d5db; }
+    .tile-green { background-color: #bbf7d0; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="min-h-screen p-6">
+    <h1 class="text-3xl font-bold text-center mb-4">IQ Test</h1>
+
+    <div id="timer" class="text-center text-xl font-semibold mb-6"></div>
+
+    <div class="max-w-4xl mx-auto">
+      <div id="questionContainer" class="bg-white p-6 rounded-2xl shadow mb-6">
+        <p id="questionText" class="text-lg font-medium"></p>
+        <div id="options" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+      </div>
+
+      <div class="flex flex-wrap gap-2 justify-center mb-6" id="navTiles"></div>
+
+      <div class="text-center">
+        <button onclick="submitAnswers()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-xl">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let questions = [];
+    let timeRemaining = 300;
+    let currentIndex = 0;
+    let userAnswers = [];
+
+    const questionText = document.getElementById('questionText');
+    const optionsDiv = document.getElementById('options');
+    const navTiles = document.getElementById('navTiles');
+    const timerDiv = document.getElementById('timer');
+
+    const setFile = localStorage.getItem('selectedSetFile');
+
+    function loadSet() {
+      fetch(`data/${setFile}`)
+        .then(res => res.json())
+        .then(data => {
+          questions = data.questions;
+          timeRemaining = data.time || 300;
+          localStorage.setItem('selectedSet', data.title || 'Unknown Set');
+          userAnswers = Array(questions.length).fill(null);
+          renderQuestion(currentIndex);
+          updateTiles();
+          startTimer();
+        })
+        .catch(() => {
+          alert('Failed to load question set.');
+          window.location.href = 'index.html';
+        });
+    }
+
+    function renderQuestion(index) {
+      const q = questions[index];
+      questionText.textContent = q.q;
+      optionsDiv.innerHTML = '';
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full bg-blue-100 hover:bg-blue-200 text-left px-4 py-2 rounded-xl';
+        btn.textContent = opt;
+        btn.onclick = () => {
+          userAnswers[index] = i;
+          updateTiles();
+        };
+        optionsDiv.appendChild(btn);
+      });
+    }
+
+    function updateTiles() {
+      navTiles.innerHTML = '';
+      for (let i = 0; i < questions.length; i++) {
+        const tile = document.createElement('button');
+        tile.className = `tile rounded-full w-10 h-10 text-sm font-semibold ${userAnswers[i] === null ? (i === currentIndex ? 'tile-gray' : 'tile-white') : 'tile-green'}`;
+        tile.textContent = i + 1;
+        tile.onclick = () => {
+          currentIndex = i;
+          renderQuestion(i);
+          updateTiles();
+        };
+        navTiles.appendChild(tile);
+      }
+    }
+
+    function startTimer() {
+      const interval = setInterval(() => {
+        timeRemaining--;
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        timerDiv.textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+        if (timeRemaining <= 0) {
+          clearInterval(interval);
+          submitAnswers();
+        }
+      }, 1000);
+    }
+
+    function submitAnswers() {
+      let correct = 0;
+      questions.forEach((q, i) => {
+        if (userAnswers[i] === q.answer) correct++;
+      });
+      const score = Math.round((correct / questions.length) * 100);
+      const history = JSON.parse(localStorage.getItem('scoreHistory') || '[]');
+      const selectedSet = localStorage.getItem('selectedSet') || 'Unknown Set';
+      history.push({ set: selectedSet, score, date: new Date().toLocaleString() });
+      localStorage.setItem('scoreHistory', JSON.stringify(history));
+      alert(`You scored ${score}%`);
+      window.location.href = 'index.html';
+    }
+
+    loadSet();
+  </script>
+</body>
+</html>
