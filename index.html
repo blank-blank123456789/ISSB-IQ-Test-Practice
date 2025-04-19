@@ -18,29 +18,26 @@
   </div>
 
   <script>
-    fetch('data/')
-      .then(response => response.text())
-      .then(data => {
-        const files = [...data.matchAll(/href="(.*?)"/g)].map(m => m[1]).filter(f => f.endsWith('.json'));
+    // Fetching the JSON data from the raw GitHub URL
+    fetch('https://raw.githubusercontent.com/blank-blank123456789/ISSB-IQ-Test-Practice/refs/heads/main/data/demo.json')
+      .then(res => res.json())
+      .then(json => {
         const container = document.getElementById('setList');
 
-        files.forEach(file => {
-          fetch(`data/${file}`)
-            .then(res => res.json())
-            .then(json => {
-              const card = document.createElement('div');
-              card.className = 'bg-white p-4 rounded-2xl shadow hover:shadow-lg cursor-pointer';
-              card.innerHTML = `
-                <h2 class="text-xl font-semibold mb-2">${json.title || file}</h2>
-                <p>${json.questions.length} questions · ${json.time || 300}s</p>
-              `;
-              card.onclick = () => {
-                localStorage.setItem('selectedSetFile', file);
-                window.location.href = 'test.html';
-              };
-              container.appendChild(card);
-            });
-        });
+        const card = document.createElement('div');
+        card.className = 'bg-white p-4 rounded-2xl shadow hover:shadow-lg cursor-pointer';
+        card.innerHTML = `
+          <h2 class="text-xl font-semibold mb-2">${json.title || "Demo Set"}</h2>
+          <p>${json.questions.length} questions · ${json.time || 300}s</p>
+        `;
+        card.onclick = () => {
+          localStorage.setItem('selectedSetFile', 'demo.json');
+          window.location.href = 'test.html';
+        };
+        container.appendChild(card);
+      })
+      .catch(err => {
+        console.error('Error loading JSON:', err);
       });
   </script>
 </body>
